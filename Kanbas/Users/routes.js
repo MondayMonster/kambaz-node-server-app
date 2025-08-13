@@ -19,22 +19,29 @@ export default function UserRoutes(app) {
   app.delete("/api/users/:userId", deleteUser);
 
   const findAllUsers = async (req, res) => {
-    // find users of specific role
-    const { role, name } = req.query;
-    if (role) {
-      const users = await dao.findUsersByRole(role);
+    try {
+      // find users of specific role
+      const { role, name } = req.query;
+      if (role) {
+        const users = await dao.findUsersByRole(role);
+        res.json(users);
+        return;
+      }
+      // filtering users by their first or lastName
+      if (name) {
+        const users = await dao.findUsersByPartialName(name);
+        res.json(users);
+        return;
+      }
+      // find all users
+      console.log("Finding all users...");
+      const users = await dao.findAllUsers();
+      console.log("Found users:", users.length);
       res.json(users);
-      return;
+    } catch (error) {
+      console.error("Error in findAllUsers:", error);
+      res.status(500).json({ error: error.message });
     }
-    // filtering users by their first or lastName
-    if (name) {
-      const users = await dao.findUsersByPartialName(name);
-      res.json(users);
-      return;
-    }
-    // find all users
-    const users = await dao.findAllUsers();
-    res.json(users);
   };
   app.get("/api/users", findAllUsers);
 
@@ -164,4 +171,21 @@ export default function UserRoutes(app) {
     res.json(newCourse);
   };
   app.post("/api/users/current/courses", createCourse);
+
+  // Debug route to check database content
+  const checkDatabase = async (req, res) => {
+    try {
+      const allUsers = await dao.findAllUsers();
+      const userCount = allUsers.length;
+      const usernames = allUsers.map(user => user.username);
+      res.json({
+        userCount,
+        usernames,
+        firstUser: allUsers[0] || null
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+  app.get("/api/users/debug", checkDatabase);
 }

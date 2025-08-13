@@ -9,6 +9,12 @@ import CourseRoutes from "./Kanbas/Courses/routes.js";
 import session from "express-session";
 import ModuleRoutes from "./Kanbas/Modules/routes.js";
 import AssignmentRoutes from "./Kanbas/Assignments/routes.js";
+import mongoose from "mongoose";
+import "dotenv/config";
+
+const CONNECTION_STRING =
+  process.env.MONGO_CONNECTION_STRING || "mongodb+srv://giuseppi:<db_password>@kambaz.bjusetp.mongodb.net/?retryWrites=true&w=majority&appName=Kambaz";
+mongoose.connect(CONNECTION_STRING);
 
 const app = express();
 app.use(

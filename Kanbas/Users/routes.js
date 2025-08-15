@@ -108,22 +108,40 @@ export default function UserRoutes(app) {
   app.post("/api/users/profile", profile);
 
   const findCoursesForUser = async (req, res) => {
-    const currentUser = req.session["currentUser"];
-    if (!currentUser) {
-      res.sendStatus(401);
-      return;
-    }
-    if (currentUser.role === "ADMIN") {
-      const courses = await courseDao.findAllCourses();
+    try {
+      const currentUser = req.session["currentUser"];
+      if (!currentUser) {
+        res.sendStatus(401);
+        return;
+      }
+      
+      if (currentUser.role === "ADMIN") {
+        const courses = await courseDao.findAllCourses();
+        res.json(courses);
+        return;
+      }
+      
+      let { uid } = req.params;
+      // Handle undefined user ID
+      if (uid === "undefined" || uid === undefined) {
+        uid = currentUser._id; // Use current user as fallback
+      }
+      
+      if (uid === "current") {
+        uid = currentUser._id;
+      }
+      
+      // Add additional check to ensure uid is valid
+      if (!uid) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      
+      const courses = await enrollmentsDao.findCoursesForUser(uid);
       res.json(courses);
-      return;
+    } catch (error) {
+      console.error("Error in findCoursesForUser:", error);
+      res.status(500).json({ error: error.message || "Failed to fetch courses" });
     }
-    let { uid } = req.params;
-    if (uid === "current") {
-      uid = currentUser._id;
-    }
-    const courses = await enrollmentsDao.findCoursesForUser(uid);
-    res.json(courses);
   };
   app.get("/api/users/:uid/courses", findCoursesForUser);
 

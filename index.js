@@ -18,7 +18,7 @@ import QuestionsRoutes from "./Kanbas/Questions/routes.js";
 import RecordsRoutes from "./Kanbas/Records/routes.js";
 
 const CONNECTION_STRING =
-  process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kanbas";
+  process.env.MONGO_CONNECTION_STRING || "mongodb+srv://giuseppi:supersecretpassword@kambaz.bjusetp.mongodb.net/kambaz?retryWrites=true&w=majority&appName=Kambaz";
 mongoose.connect(CONNECTION_STRING);
 
 const app = express();

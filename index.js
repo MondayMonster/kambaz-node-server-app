@@ -12,8 +12,13 @@ import AssignmentRoutes from "./Kanbas/Assignments/routes.js";
 import mongoose from "mongoose";
 import "dotenv/config";
 
+
+import QuizzesRoutes from "./Kanbas/Quizzes/routes.js";
+import QuestionsRoutes from "./Kanbas/Questions/routes.js";
+import RecordsRoutes from "./Kanbas/Records/routes.js";
+
 const CONNECTION_STRING =
-  process.env.MONGO_CONNECTION_STRING || "mongodb+srv://giuseppi:supersecretpassword@kambaz.bjusetp.mongodb.net/?retryWrites=true&w=majority&appName=Kambaz";
+  process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kanbas";
 mongoose.connect(CONNECTION_STRING);
 
 const app = express();
@@ -50,6 +55,9 @@ AssignmentRoutes(app);
 Hello(app);
 Lab5(app);
 
+QuizzesRoutes(app);
+QuestionsRoutes(app);
+RecordsRoutes(app);
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

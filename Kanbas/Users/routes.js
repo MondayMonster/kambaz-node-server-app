@@ -111,7 +111,7 @@ export default function UserRoutes(app) {
     try {
       const currentUser = req.session["currentUser"];
       if (!currentUser) {
-        res.sendStatus(401);
+        res.status(401).json({ error: "Not authenticated" });
         return;
       }
       
@@ -122,9 +122,11 @@ export default function UserRoutes(app) {
       }
       
       let { uid } = req.params;
-      // Handle undefined user ID
-      if (uid === "undefined" || uid === undefined) {
-        uid = currentUser._id; // Use current user as fallback
+      
+      // Better handling for undefined or missing user ID
+      if (!uid || uid === "undefined") {
+        console.log("Using current user ID as fallback for undefined user ID");
+        uid = currentUser._id;
       }
       
       if (uid === "current") {
@@ -133,16 +135,22 @@ export default function UserRoutes(app) {
       
       // Add additional check to ensure uid is valid
       if (!uid) {
+        console.error("Invalid user ID even after fallbacks");
         return res.status(400).json({ error: "Invalid user ID" });
       }
       
+      console.log(`Fetching courses for user: ${uid}`);
       const courses = await enrollmentsDao.findCoursesForUser(uid);
+      console.log(`Found ${courses.length} courses for user ${uid}`);
       res.json(courses);
     } catch (error) {
       console.error("Error in findCoursesForUser:", error);
       res.status(500).json({ error: error.message || "Failed to fetch courses" });
     }
   };
+  
+  // Create a special endpoint for current user courses that doesn't rely on URL parameters
+  app.get("/api/users/current/courses", findCoursesForUser);
   app.get("/api/users/:uid/courses", findCoursesForUser);
 
   const findEnrollmentsForUser = async (req, res) => {

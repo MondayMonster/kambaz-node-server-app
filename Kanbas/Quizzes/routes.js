@@ -12,6 +12,27 @@ export default function QuizzesRoutes(app) {
       res.sendStatus(500);
     }
   });
+  
+  // create new Quiz for a specific course
+  app.post("/api/courses/:courseId/quizzes", async (req, res) => {
+    const { courseId } = req.params;
+    const newQuiz = { ...req.body, course: courseId };
+    
+    try {
+      console.log("Creating quiz for course:", courseId, newQuiz);
+      const createdQuiz = await quizzesDao.createQuiz(newQuiz);
+      res.status(201).json({
+        message: `Quiz: "${createdQuiz.title}" has been created for course ${courseId}`,
+        quiz: createdQuiz,
+      });
+    } catch (error) {
+      console.error("Error creating quiz for course:", error);
+      res.status(500).json({ 
+        message: "Error when creating new Quiz",
+        error: error.message 
+      });
+    }
+  });
 
   // create new Quiz
   app.post("/api/quizzes", async (req, res) => {

@@ -80,13 +80,15 @@ export default function UserRoutes(app) {
     console.log("Signin attempt:", { username, password }); // Debug log
     const currentUser = await dao.findUserByCredentials(username, password);
     console.log("Found user:", currentUser); // Debug log
+    
+    // Log the _id specifically to debug
     if (currentUser) {
+      console.log("User ID from database:", currentUser._id);
       req.session["currentUser"] = currentUser;
       res.json(currentUser);
     } else {
       res.status(401).json({ message: "Unable to login. Try again later." });
     }
-    // console.log("sign in current user!!", currentUser);
   };
   app.post("/api/users/signin", signin);
 
@@ -110,6 +112,8 @@ export default function UserRoutes(app) {
   const findCoursesForUser = async (req, res) => {
     try {
       const currentUser = req.session["currentUser"];
+      console.log("Current user in session:", currentUser);
+      
       if (!currentUser) {
         res.status(401).json({ error: "Not authenticated" });
         return;
@@ -122,20 +126,25 @@ export default function UserRoutes(app) {
       }
       
       let { uid } = req.params;
+      console.log("Original uid from params:", uid);
       
       // Better handling for undefined or missing user ID
       if (!uid || uid === "undefined") {
         console.log("Using current user ID as fallback for undefined user ID");
-        uid = currentUser._id;
+        // Make sure the _id is properly accessed
+        uid = currentUser._id || currentUser.id; // Try both _id and id
+        console.log("Using fallback ID:", uid);
       }
       
       if (uid === "current") {
-        uid = currentUser._id;
+        uid = currentUser._id || currentUser.id;
+        console.log("Using 'current' as ID, resolved to:", uid);
       }
       
       // Add additional check to ensure uid is valid
       if (!uid) {
-        console.error("Invalid user ID even after fallbacks");
+        // If we still don't have a valid uid, log the entire currentUser object for debugging
+        console.error("Invalid user ID even after fallbacks. Current user:", JSON.stringify(currentUser));
         return res.status(400).json({ error: "Invalid user ID" });
       }
       

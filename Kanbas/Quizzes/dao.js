@@ -1,8 +1,18 @@
 import model from "./model.js";
+import mongoose from "mongoose";
 
 // find all Quizzes for a course
 export function findQuizzesForCourse(courseId) {
-  return model.find({ course: courseId });
+  try {
+    // Check if courseId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return Promise.resolve([]);
+    }
+    return model.find({ course: courseId });
+  } catch (error) {
+    console.error("Error in findQuizzesForCourse:", error);
+    return Promise.reject(error);
+  }
 }
 
 // create new  Quiz
@@ -29,5 +39,14 @@ export function findAllQuizzes() {
 
 // find a Quiz with quizId
 export function findQuizById(quizId) {
-  return model.findById(quizId);
+  try {
+    // Check if quizId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(quizId)) {
+      return Promise.resolve(null);
+    }
+    return model.findById(quizId);
+  } catch (error) {
+    console.error("Error in findQuizById:", error);
+    return Promise.reject(error);
+  }
 }

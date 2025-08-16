@@ -1,4 +1,5 @@
 import * as quizzesDao from "./dao.js";
+import mongoose from "mongoose";
 
 export default function QuizzesRoutes(app) {
   // find all Quizzes for a course
@@ -9,6 +10,52 @@ export default function QuizzesRoutes(app) {
       res.json(quizzes);
     } catch (error) {
       console.error("Error fetching quizzes for course:", error);
+      res.sendStatus(500);
+    }
+  });
+  
+  // get a specific quiz for a course, including handling NewQuiz
+  app.get("/api/courses/:courseId/quizzes/:quizId", async (req, res) => {
+    const { courseId, quizId } = req.params;
+    
+    // Special case for "NewQuiz" to handle creating a new quiz form
+    if (quizId === "NewQuiz" || quizId === "new") {
+      // Return a template for a new quiz
+      return res.json({
+        _id: null,
+        title: "",
+        type: "Graded Quiz",
+        point: 0,
+        status: "Unpublished",
+        course: courseId,
+        assignmentGroup: "Quizzes",
+        shuffleAnswer: "Yes",
+        timeLimit: 20,
+        multipleAttempts: "No",
+        howManyAttempts: 1,
+        showCorrectAnswers: "Immediately",
+        oneQuestionAtATime: "Yes",
+        webcamRequired: "No",
+        lockQuestionsAfterAnswering: "No",
+        dueDate: new Date(),
+        availableDate: new Date(),
+        untilDate: new Date(),
+        accessCode: "",
+        description: "",
+        isNew: true
+      });
+    }
+    
+    try {
+      // First check if quiz exists and belongs to the course
+      const quiz = await quizzesDao.findQuizById(quizId);
+      if (quiz && quiz.course.toString() === courseId) {
+        res.json(quiz);
+      } else {
+        res.status(404).json({ message: "Quiz not found for this course" });
+      }
+    } catch (error) {
+      console.error("Error fetching quiz for course:", error);
       res.sendStatus(500);
     }
   });
@@ -53,6 +100,15 @@ export default function QuizzesRoutes(app) {
   app.put("/api/quizzes/:quizId", async (req, res) => {
     const { quizId } = req.params;
     const quizUpdates = req.body;
+    
+    // Check if quizId is valid
+    if (!mongoose.Types.ObjectId.isValid(quizId)) {
+      return res.status(400).json({ 
+        message: "Invalid quiz ID format", 
+        error: "Quiz ID must be a valid MongoDB ObjectId" 
+      });
+    }
+    
     try {
       const status = await quizzesDao.updateQuiz(quizId, quizUpdates);
       if (status.modifiedCount === 1) {
@@ -62,13 +118,25 @@ export default function QuizzesRoutes(app) {
       }
     } catch (error) {
       console.error("Error updating quiz:", error);
-      res.status(500).json({ message: "Error when updating Quiz" });
+      res.status(500).json({ 
+        message: "Error when updating Quiz", 
+        error: error.message 
+      });
     }
   });
 
   // delete Quiz
   app.delete("/api/quizzes/:quizId", async (req, res) => {
     const { quizId } = req.params;
+    
+    // Check if quizId is valid
+    if (!mongoose.Types.ObjectId.isValid(quizId)) {
+      return res.status(400).json({ 
+        message: "Invalid quiz ID format", 
+        error: "Quiz ID must be a valid MongoDB ObjectId" 
+      });
+    }
+    
     try {
       // find the Quiz which is going to be deleted
       const quiz = await quizzesDao.findQuizById(quizId);
@@ -85,7 +153,10 @@ export default function QuizzesRoutes(app) {
       }
     } catch (error) {
       console.error("Error deleting quiz:", error);
-      res.sendStatus(500);
+      res.status(500).json({ 
+        message: "Error when deleting Quiz", 
+        error: error.message 
+      });
     }
   });
 
@@ -103,6 +174,34 @@ export default function QuizzesRoutes(app) {
   // find a Quiz with quizId
   app.get("/api/quizzes/:quizId", async (req, res) => {
     const { quizId } = req.params;
+    
+    // Special case for "NewQuiz" to handle creating a new quiz form
+    if (quizId === "NewQuiz" || quizId === "new") {
+      // Return a template for a new quiz
+      return res.json({
+        _id: null,
+        title: "",
+        type: "Graded Quiz",
+        point: 0,
+        status: "Unpublished",
+        assignmentGroup: "Quizzes",
+        shuffleAnswer: "Yes",
+        timeLimit: 20,
+        multipleAttempts: "No",
+        howManyAttempts: 1,
+        showCorrectAnswers: "Immediately",
+        oneQuestionAtATime: "Yes",
+        webcamRequired: "No",
+        lockQuestionsAfterAnswering: "No",
+        dueDate: new Date(),
+        availableDate: new Date(),
+        untilDate: new Date(),
+        accessCode: "",
+        description: "",
+        isNew: true
+      });
+    }
+    
     try {
       const quiz = await quizzesDao.findQuizById(quizId);
       if (quiz) {
